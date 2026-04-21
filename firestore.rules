@@ -1,0 +1,81 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Article rules
+    match /articles/{articleId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && 
+        incoming().nome is string && incoming().nome.size() > 0 &&
+        incoming().codice is string && incoming().codice.size() > 0;
+      allow delete: if isSignedIn(); // Assuming admins manage this
+    }
+
+    // Processes rules
+    match /processes/{processId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() &&
+        incoming().articolo_id is string;
+      allow delete: if isSignedIn();
+    }
+
+    // Clients rules
+    match /clients/{clientId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() &&
+        incoming().nome is string && incoming().nome.size() > 0;
+      allow delete: if isSignedIn();
+    }
+
+    // Commitments rules
+    match /commitments/{commitmentId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() &&
+        incoming().articolo_id is string &&
+        incoming().cliente is string &&
+        incoming().quantita is int;
+      allow delete: if isSignedIn();
+    }
+
+    // Movements Log rules
+    match /movements_log/{movementId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() &&
+        incoming().articolo_id is string &&
+        incoming().fase is string &&
+        incoming().tipo is string &&
+        incoming().quantita is int;
+      allow update, delete: if isSignedIn(); // Log edits usually restricted, but allowing for now
+    }
+
+    // Chat Messages rules
+    match /chat_messages/{messageId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() &&
+        incoming().sender is string &&
+        incoming().text is string;
+      allow update, delete: if false; // Immutable chat
+    }
+  }
+}

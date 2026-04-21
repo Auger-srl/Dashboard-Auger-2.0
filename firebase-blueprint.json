@@ -1,0 +1,126 @@
+{
+  "entities": {
+    "Article": {
+      "title": "Article",
+      "description": "Inventory item details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nome": { "type": "string" },
+        "codice": { "type": "string" },
+        "verniciati": { "type": "integer" },
+        "impegni_clienti": { "type": "integer" },
+        "piega": { "type": "integer" },
+        "scorta": { "type": "integer" },
+        "prezzo": { "type": "number" },
+        "famiglia": { "type": "string" },
+        "is_blocked": { "type": "integer" }
+      },
+      "required": ["nome", "codice"]
+    },
+    "Process": {
+      "title": "Process",
+      "description": "Manufacturing processes for an article",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "articolo_id": { "type": "string" },
+        "taglio": { "type": "integer" },
+        "piega": { "type": "integer" },
+        "saldatura": { "type": "integer" },
+        "verniciatura": { "type": "integer" }
+      },
+      "required": ["articolo_id"]
+    },
+    "Client": {
+      "title": "Client",
+      "description": "Customer details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nome": { "type": "string" },
+        "email": { "type": "string" },
+        "telefono": { "type": "string" },
+        "data_inserimento": { "type": "string", "format": "date-time" }
+      },
+      "required": ["nome"]
+    },
+    "Commitment": {
+      "title": "Commitment",
+      "description": "Customer order or production commitment",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "articolo_id": { "type": "string" },
+        "cliente": { "type": "string" },
+        "commessa": { "type": "string" },
+        "quantita": { "type": "integer" },
+        "priorita": { "type": "integer" },
+        "fase_produzione": { "type": "string" },
+        "operatore": { "type": "string" },
+        "note": { "type": "string" },
+        "stato_lavorazione": { "type": "string" },
+        "data_inserimento": { "type": "string", "format": "date-time" },
+        "timestamp_modifica": { "type": "string", "format": "date-time" }
+      },
+      "required": ["articolo_id", "cliente", "commessa", "quantita"]
+    },
+    "MovementLog": {
+      "title": "MovementLog",
+      "description": "Logs of all stock movements",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "articolo_id": { "type": "string" },
+        "fase": { "type": "string" },
+        "tipo": { "type": "string" },
+        "quantita": { "type": "integer" },
+        "operatore": { "type": "string" },
+        "cliente": { "type": "string" },
+        "commessa": { "type": "string" },
+        "quantita_lanciata": { "type": "integer" },
+        "tempo": { "type": "integer" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["articolo_id", "fase", "tipo", "quantita"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Chat message for internal coordination",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sender": { "type": "string" },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["sender", "text"]
+    }
+  },
+  "firestore": {
+    "/articles/{articleId}": {
+      "schema": "Article",
+      "description": "Main articles collection"
+    },
+    "/processes/{processId}": {
+      "schema": "Process",
+      "description": "Manufacturing processes mapping"
+    },
+    "/clients/{clientId}": {
+      "schema": "Client",
+      "description": "Clients database"
+    },
+    "/commitments/{commitmentId}": {
+      "schema": "Commitment",
+      "description": "Commitments/Orders collection"
+    },
+    "/movements_log/{movementId}": {
+      "schema": "MovementLog",
+      "description": "Detailed log of stock movements"
+    },
+    "/chat_messages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "Shared chat messages"
+    }
+  }
+}
