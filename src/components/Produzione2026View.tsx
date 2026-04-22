@@ -508,11 +508,11 @@ export default function Produzione2026View({
       );
     }
 
-    const allPhaseCommitments = (commitments || []).filter(c => 
-      c.articolo_id === articleId && 
-      c.fase_produzione === phase &&
-      c.stato_lavorazione !== 'Completato'
-    );
+    const allPhaseCommitments = (commitments || []).filter(c => {
+      if (c.articolo_id !== articleId || c.stato_lavorazione === 'Completato') return false;
+      if (phase === 'Piega') return c.fase_produzione === 'Piega' || c.fase_produzione === 'Grezzo';
+      return c.fase_produzione === phase;
+    });
 
     const phaseCommitments = allPhaseCommitments.filter(c => 
       (!debouncedCommessa || (c.commessa || '').toLowerCase().includes(debouncedCommessa.toLowerCase())) &&
@@ -670,8 +670,7 @@ export default function Produzione2026View({
       }
       
       // If commessa or cliente search is active, the article must have matching commitments
-      const targetPhase = 'Verniciatura';
-      const articleCommitments = commitments.filter(c => c.articolo_id === a.id && c.stato_lavorazione !== 'Completato' && c.fase_produzione === targetPhase);
+      const articleCommitments = commitments.filter(c => c.articolo_id === a.id && c.stato_lavorazione !== 'Completato');
       
       const matchesCommessa = !debouncedCommessa || articleCommitments.some(c => 
         (c.commessa || '').toLowerCase().includes(debouncedCommessa.toLowerCase())
@@ -986,8 +985,7 @@ export default function Produzione2026View({
                         )}
                         {categoryArticles.map(article => {
                           const process = getProcess(article.id);
-                          const targetPhase = 'Verniciatura';
-                          const articleCommitments = commitments.filter(c => c.articolo_id === article.id && c.stato_lavorazione !== 'Completato' && c.fase_produzione === targetPhase);
+                          const articleCommitments = commitments.filter(c => c.articolo_id === article.id && c.stato_lavorazione !== 'Completato');
                           
                           const filteredImpCount = getArticleFilteredCommitmentsCount(article.id);
                           const totalImpCount = getArticleTotalCommitments(article.id);

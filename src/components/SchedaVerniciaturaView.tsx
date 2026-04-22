@@ -8,8 +8,10 @@ import {
   addFaseVerniciatura,
   addFaseSaldatura,
   addFasePannelatrice,
-  addFaseTaglio
+  addFaseTaglio,
+  fetchProcesses
 } from '../api';
+import { Process } from '../types';
 import toast from 'react-hot-toast';
 import { Play, Scissors, Flame, CornerDownRight, PaintBucket, X, Search } from 'lucide-react';
 import clsx from 'clsx';
@@ -20,10 +22,14 @@ interface Props {
 
 export default function SchedaVerniciaturaView({ articles = [] }: Props) {
   const [clients, setClients] = useState<Client[]>([]);
+  const [processes, setProcesses] = useState<Process[]>([]);
 
   useEffect(() => {
     fetchClients().then(data => {
       if (Array.isArray(data)) setClients(data);
+    }).catch(console.error);
+    fetchProcesses().then(data => {
+      if (Array.isArray(data)) setProcesses(data);
     }).catch(console.error);
   }, []);
 
@@ -304,15 +310,22 @@ export default function SchedaVerniciaturaView({ articles = [] }: Props) {
       return standardRALs.includes(r);
     };
 
-    const allItems: any[] = [];
+    const spcPhrases = [
+      'ripreso a laser', 
+      'spc', 
+      'speciale', 
+      'ripreso', 
+      'forata', 
+      'aerazione completa', 
+      'aerazione lati esterni'
+    ];
 
+    const allItems: any[] = [];
     const collectItems = (rows: any[]) => {
       rows.forEach(row => {
         if (!row.cod || !row.nr) return;
-        
         const qty = parseInt(row.nr, 10);
         if (isNaN(qty) || qty <= 0) return;
-
         allItems.push({
           codice_articolo: row.cod,
           descrizione: row.desc,
@@ -323,7 +336,6 @@ export default function SchedaVerniciaturaView({ articles = [] }: Props) {
         });
       });
     };
-
     collectItems(table1Rows);
     collectItems(table2Rows);
 
@@ -331,46 +343,49 @@ export default function SchedaVerniciaturaView({ articles = [] }: Props) {
       return toast.error('Nessun articolo valido da impegnare');
     }
 
+    // Determine correctness of articles
+    for (const item of allItems) {
+      if (!item.codice_articolo.toUpperCase().endsWith('-PVR') && !item.codice_articolo.toUpperCase().endsWith('-SPC')) {
+        const art = articles.find(a => a.codice.toUpperCase() === item.codice_articolo.toUpperCase());
+        if (!art) {
+          return toast.error(`Tipo articolo non definito o errato: ${item.codice_articolo}`);
+        }
+      }
+    }
+
     try {
-      toast.loading('Creazione impegni...', { id: 'impegno' });
+      toast.loading('Creazione impegni in corso...', { id: 'impegno' });
       
+      const isBatchStandard = allItems.every(item => {
+        const noteLower = item.note.toLowerCase();
+        const isSPC = spcPhrases.some(phrase => noteLower.includes(phrase));
+        const isMacchina5000 = noteLower.includes('macchina 5000') || noteLower.includes('taglio laser');
+        return !isSPC && !isMacchina5000 && isStandardRAL(item.ral);
+      });
+
+      console.log(`--- DEBUG FLUSSO CREAZIONE ---`);
+      console.log(`Lotto è Tutto Standard? ${isBatchStandard}`);
+
+      const commitmentsToAdd: any[] = [];
+
       for (const item of allItems) {
         const noteLower = item.note.toLowerCase();
-        const isMacchina5000 = noteLower.includes('macchina 5000');
-        const isTaglioLaser = noteLower.includes('taglio laser');
-        const standardRal = isStandardRAL(item.ral);
-        const startsWithAGPO = item.codice_articolo.toUpperCase().startsWith('AG-PO');
-
+        const isSPC = spcPhrases.some(phrase => noteLower.includes(phrase));
+        const isMacchina5000 = noteLower.includes('macchina 5000') || noteLower.includes('taglio laser');
         const articoloFull = item.codice_articolo + (item.descrizione ? ` - ${item.descrizione}` : '');
+        
+        let impegnoFase = 'Verniciatura';
+        let repartoIniziale = '';
+        let tracciamento = '';
+        let fasiReq = '';
 
-        if (isMacchina5000 || isTaglioLaser) {
-          // A. Flusso Speciale "Fase Taglio"
-          await addFaseTaglio({
-            lavorazione_per: headerData.cliente.trim().toUpperCase(),
-            articolo: articoloFull,
-            quantita: item.quantita,
-            data: new Date().toLocaleDateString('it-IT'),
-            fatto: 0,
-            stampato: 0,
-            odl: headerData.ordineCliente || '',
-            commessa: headerData.commessa.trim().toUpperCase(),
-            macchina: isMacchina5000 ? 'Macchina 5000' : 'Taglio Laser',
-            note: item.note
-          });
+        if (isBatchStandard) {
+          // CASO STANDARD
+          impegnoFase = 'Verniciatura';
+          repartoIniziale = 'Verniciatura';
+          tracciamento = 'Movimenti';
+          fasiReq = 'Verniciatura';
 
-          await addMovimentoCGialla({
-            articolo_spc: articoloFull,
-            fase: isMacchina5000 ? 'INIZIO (Macchina 5000)' : 'INIZIO (Taglio Laser)',
-            quantita: item.quantita,
-            cliente: headerData.cliente.trim().toUpperCase(),
-            commessa: headerData.commessa.trim().toUpperCase(),
-            operatore: 'Auto SV',
-            tempo_min: 0,
-            data_reg: new Date().toISOString()
-          });
-
-        } else if (standardRal || startsWithAGPO) {
-          // B. Flusso Diretto
           await addFaseVerniciatura({
             data: new Date().toLocaleDateString('it-IT'),
             articolo: articoloFull,
@@ -382,35 +397,120 @@ export default function SchedaVerniciaturaView({ articles = [] }: Props) {
             stato: 'da lavorare'
           });
 
+        } else if (isMacchina5000) {
+          // ARTICOLO MACCHINA 5000 / TAGLIO LASER
+          impegnoFase = 'Taglio';
+          repartoIniziale = 'Taglio (RidaTecnico)';
+          tracciamento = 'Storico C.G.';
+          fasiReq = 'Taglio -> M5000/Laser -> Pannellatrice'; // (e Verniciatura gestito dal domino se serve)
+
+          await addFaseTaglio({
+            lavorazione_per: headerData.cliente.trim().toUpperCase(),
+            articolo: articoloFull,
+            quantita: item.quantita,
+            data: new Date().toLocaleDateString('it-IT'),
+            fatto: 0,
+            stampato: 0,
+            odl: headerData.ordineCliente || '',
+            commessa: headerData.commessa.trim().toUpperCase(),
+            macchina: noteLower.includes('macchina 5000') ? 'Macchina 5000' : 'Taglio Laser',
+            note: item.note
+          });
+
+          await addMovimentoCGialla({
+            articolo_spc: articoloFull,
+            fase: noteLower.includes('macchina 5000') ? 'INIZIO (Macchina 5000)' : 'INIZIO (Taglio Laser)',
+            quantita: item.quantita,
+            cliente: headerData.cliente.trim().toUpperCase(),
+            commessa: headerData.commessa.trim().toUpperCase(),
+            operatore: 'Auto SV',
+            tempo_min: 0,
+            data_reg: new Date().toISOString()
+          });
+
+        } else if (isSPC) {
+          // ARTICOLO FORATO / SPC
+          impegnoFase = 'Grezzo'; // Usually corresponds to Piegatura in real terms, but label Grezzo
+          repartoIniziale = 'Pannellatrice';
+          tracciamento = 'Storico C.G.';
+          fasiReq = 'Pannellatrice'; // NON passa da verniciatura in questa fase
+
+          await addFasePannelatrice({
+            data: new Date().toLocaleDateString('it-IT'),
+            articolo: articoloFull,
+            quantita: item.quantita,
+            odl: headerData.ordineCliente || '',
+            cliente: headerData.cliente.trim().toUpperCase(),
+            commessa: headerData.commessa.trim().toUpperCase(),
+            note: item.note,
+            stato: 'da lavorare'
+          });
+
+          await addMovimentoCGialla({
+            articolo_spc: articoloFull,
+            fase: 'INIZIO (Pannellatrice)',
+            quantita: item.quantita,
+            cliente: headerData.cliente.trim().toUpperCase(),
+            commessa: headerData.commessa.trim().toUpperCase(),
+            operatore: 'Auto SV',
+            tempo_min: 0,
+            data_reg: new Date().toISOString()
+          });
+
         } else {
-          // C. Flusso Normale / RAL Speciali
-          if (item.parte === 'STRUTTURA') {
-            await addFaseSaldatura({
-              data: new Date().toLocaleDateString('it-IT'),
-              articolo: articoloFull,
-              quantita: item.quantita,
-              odl: headerData.ordineCliente || '',
-              cliente: headerData.cliente.trim().toUpperCase(),
-              commessa: headerData.commessa.trim().toUpperCase(),
-              note: item.note,
-              stato: 'da lavorare'
-            });
-          } else {
-            await addFasePannelatrice({
-              data: new Date().toLocaleDateString('it-IT'),
-              articolo: articoloFull,
-              quantita: item.quantita,
-              odl: headerData.ordineCliente || '',
-              cliente: headerData.cliente.trim().toUpperCase(),
-              commessa: headerData.commessa.trim().toUpperCase(),
-              note: item.note,
-              stato: 'da lavorare'
-            });
-          }
+          // ARTICOLO STANDARD (ma in un lotto non standard) -> va a Verniciatura
+          impegnoFase = 'Verniciatura';
+          repartoIniziale = 'Verniciatura';
+          tracciamento = 'Movimenti';
+          fasiReq = 'Verniciatura';
+
+          await addFaseVerniciatura({
+            data: new Date().toLocaleDateString('it-IT'),
+            articolo: articoloFull,
+            quantita: item.quantita,
+            odl: headerData.ordineCliente || '',
+            cliente: headerData.cliente.trim().toUpperCase(),
+            commessa: headerData.commessa.trim().toUpperCase(),
+            note: item.note,
+            stato: 'da lavorare'
+          });
         }
+
+        console.log(`Articolo: ${item.codice_articolo} | Impegno: ${impegnoFase} | Reparto: ${repartoIniziale} | Tracciamento: ${tracciamento} | Fasi: ${fasiReq}`);
+
+        // Prepare commitment entity
+        const art = articles.find(a => a.codice.toUpperCase() === item.codice_articolo.toUpperCase());
+        commitmentsToAdd.push({
+          articolo_id: art ? art.id : undefined,
+          codice_articolo: item.codice_articolo,
+          articolo_nome: art ? art.nome : `Commessa Speciale: ${item.codice_articolo}`,
+          quantita: item.quantita,
+          fase_produzione: impegnoFase,
+          tracciamento_info: tracciamento
+        });
       }
 
-      toast.success('Impegni creati con successo!', { id: 'impegno' });
+      // We group the commitments by fase_produzione to push them correctly using addCommitmentBatch
+      const fasiGroups = commitmentsToAdd.reduce((acc, curr) => {
+        if (!acc[curr.fase_produzione]) acc[curr.fase_produzione] = [];
+        acc[curr.fase_produzione].push(curr);
+        return acc;
+      }, {} as Record<string, any[]>);
+
+      for (const fase of Object.keys(fasiGroups)) {
+        await addCommitmentBatch({
+          items: fasiGroups[fase],
+          cliente: headerData.cliente.trim().toUpperCase(),
+          commessa: headerData.commessa.trim().toUpperCase(),
+          priorita: 0,
+          fase_produzione: fase,
+          note: headerData.noteSV,
+          stato_lavorazione: 'Pianificato',
+          operatore: 'Auto SV'
+        });
+      }
+
+      toast.success('Impegni creati ed elaborati con successo!', { id: 'impegno' });
     } catch (error: any) {
       console.error('Errore creazione impegno:', error);
       toast.error(`Errore: ${error.message}`, { id: 'impegno' });

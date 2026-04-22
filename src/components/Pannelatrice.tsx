@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TimedProductionItem, Article } from '../types';
-import { fetchTimedPhase, addTimedPhase, updateTimedPhase, deleteTimedPhase, addMovementLog, addMovimentoCGialla, addFaseVerniciatura } from '../api';
+import { fetchTimedPhase, addTimedPhase, updateTimedPhase, deleteTimedPhase, addMovementLog, addMovimentoCGialla, addFaseVerniciatura, addFaseSaldatura } from '../api';
+import { getCategory, isPhaseEnabled } from '../utils';
 import { toast } from 'react-hot-toast';
 import { Plus, Save, Trash2, CheckCircle, Clock, Play, Square, Loader2, RefreshCw, Edit2, X } from 'lucide-react';
 import clsx from 'clsx';
@@ -281,10 +282,39 @@ export default function Pannelatrice({
         });
       }
 
-      // Check for domino effect from Pannellatrice to Verniciatura
-      if (apiPath === '/api/fase-pannelatrice') {
-        const noteLower = (item.note || '').toLowerCase();
-        if (noteLower.includes('macchina 5000') || noteLower.includes('taglio laser')) {
+      // Check for domino effect from Pannellatrice
+      if (apiPath === '/api/fase-pannelatrice' || apiPath === '/api/fase-piega-manuale') {
+        const articleObj = articles.find(a => a.codice === item.articolo || a.nome === item.articolo);
+        let needsSaldatura = false;
+        
+        if (articleObj) {
+           const cat = getCategory(articleObj.nome || '', articleObj.codice || '');
+           needsSaldatura = isPhaseEnabled(cat, 'saldatura');
+        }
+
+        if (needsSaldatura) {
+          await addFaseSaldatura({
+            data: new Date().toLocaleDateString('it-IT'),
+            articolo: item.articolo,
+            quantita: confirmedQty,
+            odl: item.odl || '',
+            cliente: item.cliente || '',
+            commessa: item.commessa || '',
+            note: item.note,
+            stato: 'da lavorare'
+          });
+          
+          await addMovimentoCGialla({
+            articolo_spc: item.articolo,
+            fase: 'Uscita Piega -> Entrata Saldatura',
+            quantita: confirmedQty,
+            cliente: item.cliente || '-',
+            commessa: item.commessa || '-',
+            operatore: 'Auto SV',
+            tempo_min: 0,
+            data_reg: new Date().toISOString()
+          });
+        } else {
           await addFaseVerniciatura({
             data: new Date().toLocaleDateString('it-IT'),
             articolo: item.articolo,
@@ -298,7 +328,7 @@ export default function Pannelatrice({
           
           await addMovimentoCGialla({
             articolo_spc: item.articolo,
-            fase: 'Uscita Pannellatrice -> Entrata Verniciatura',
+            fase: 'Uscita Piega -> Entrata Verniciatura',
             quantita: confirmedQty,
             cliente: item.cliente || '-',
             commessa: item.commessa || '-',

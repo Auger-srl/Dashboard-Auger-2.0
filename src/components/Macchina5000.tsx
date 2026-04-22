@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Macchina5000 as Macchina5000Type, Article } from '../types';
-import { fetchMacchina5000, addMacchina5000, updateMacchina5000, deleteMacchina5000, addMovementLog, addMovimentoCGialla, addFasePannelatrice } from '../api';
+import { fetchMacchina5000, addMacchina5000, updateMacchina5000, deleteMacchina5000, addMovementLog, addMovimentoCGialla, addFasePannelatrice, addFaseSaldatura, addFaseVerniciatura } from '../api';
+import { getCategory, isPhaseEnabled } from '../utils';
 import { toast } from 'react-hot-toast';
 import { Plus, Save, Trash2, CheckCircle, Clock, Play, Square, Loader2, RefreshCw, Edit2, X } from 'lucide-react';
 import clsx from 'clsx';
@@ -264,31 +265,82 @@ export default function Macchina5000({ articles, username, role, onUpdate }: Mac
         });
       }
 
-      // Check for domino effect to Pannelatrice
-      const noteLower = (item.note || '').toLowerCase();
-      // Flow rule: if note contains macchina 5000 or taglio laser, move to pannelatrice automatically
-      if (noteLower.includes('macchina 5000') || noteLower.includes('taglio laser')) {
-         await addFasePannelatrice({
-            data: new Date().toLocaleDateString('it-IT'),
-            articolo: item.articolo,
-            quantita: confirmedQty,
-            odl: item.odl || '',
-            cliente: item.cliente || '',
-            commessa: item.commessa || '',
-            note: item.note,
-            stato: 'da lavorare'
-         });
-         
-         await addMovimentoCGialla({
-            articolo_spc: item.articolo,
-            fase: 'Uscita Taglio -> Entrata Piega',
-            quantita: confirmedQty,
-            cliente: item.cliente || '-',
-            commessa: item.commessa || '-',
-            operatore: 'Auto SV',
-            tempo_min: 0,
-            data_reg: new Date().toISOString()
-         });
+      // Check for domino effect
+      let needsPiega = true;
+      let needsSaldatura = false;
+      
+      if (articleObj) {
+         const cat = getCategory(articleObj.nome || '', articleObj.codice || '');
+         needsPiega = isPhaseEnabled(cat, 'piega') || isPhaseEnabled(cat, 'gre');
+         needsSaldatura = isPhaseEnabled(cat, 'saldatura');
+      }
+
+      if (needsPiega) {
+        await addFasePannelatrice({
+          data: new Date().toLocaleDateString('it-IT'),
+          articolo: item.articolo,
+          quantita: confirmedQty,
+          odl: item.odl || '',
+          cliente: item.cliente || '',
+          commessa: item.commessa || '',
+          note: item.note,
+          stato: 'da lavorare'
+        });
+        
+        await addMovimentoCGialla({
+          articolo_spc: item.articolo,
+          fase: 'Uscita Taglio -> Entrata Piega',
+          quantita: confirmedQty,
+          cliente: item.cliente || '-',
+          commessa: item.commessa || '-',
+          operatore: 'Auto SV',
+          tempo_min: 0,
+          data_reg: new Date().toISOString()
+        });
+      } else if (needsSaldatura) {
+        await addFaseSaldatura({
+          data: new Date().toLocaleDateString('it-IT'),
+          articolo: item.articolo,
+          quantita: confirmedQty,
+          odl: item.odl || '',
+          cliente: item.cliente || '',
+          commessa: item.commessa || '',
+          note: item.note,
+          stato: 'da lavorare'
+        });
+        
+        await addMovimentoCGialla({
+          articolo_spc: item.articolo,
+          fase: 'Uscita Taglio -> Entrata Saldatura',
+          quantita: confirmedQty,
+          cliente: item.cliente || '-',
+          commessa: item.commessa || '-',
+          operatore: 'Auto SV',
+          tempo_min: 0,
+          data_reg: new Date().toISOString()
+        });
+      } else {
+        await addFaseVerniciatura({
+          data: new Date().toLocaleDateString('it-IT'),
+          articolo: item.articolo,
+          quantita: confirmedQty,
+          odl: item.odl || '',
+          cliente: item.cliente || '',
+          commessa: item.commessa || '',
+          note: item.note,
+          stato: 'da lavorare'
+        });
+        
+        await addMovimentoCGialla({
+          articolo_spc: item.articolo,
+          fase: 'Uscita Taglio -> Entrata Verniciatura',
+          quantita: confirmedQty,
+          cliente: item.cliente || '-',
+          commessa: item.commessa || '-',
+          operatore: 'Auto SV',
+          tempo_min: 0,
+          data_reg: new Date().toISOString()
+        });
       }
 
       toast.success('Lavorazione completata e carico registrato');
