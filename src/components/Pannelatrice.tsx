@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { TimedProductionItem, Article } from '../types';
 import { fetchTimedPhase, addTimedPhase, updateTimedPhase, deleteTimedPhase, addMovementLog, addMovimentoCGialla, addFaseVerniciatura, addFaseSaldatura } from '../api';
 import { getCategory, isPhaseEnabled } from '../utils';
+import { updateAvanzamentiCG } from '../utils/cgiallaHelper';
 import { toast } from 'react-hot-toast';
 import { Plus, Save, Trash2, CheckCircle, Clock, Play, Square, Loader2, RefreshCw, Edit2, X } from 'lucide-react';
 import clsx from 'clsx';
@@ -284,6 +285,9 @@ export default function Pannelatrice({
 
       // Check for domino effect from Pannellatrice
       if (apiPath === '/api/fase-pannelatrice' || apiPath === '/api/fase-piega-manuale') {
+        // AUTOMAZIONE: Da Piega a nulla finché verniciatura non finisce (o Saldatura)
+        // Eliminato da Piega, non aggiunto ancora a Verniciatura come da direttiva utente.
+        
         const articleObj = articles.find(a => a.codice === item.articolo || a.nome === item.articolo);
         let needsSaldatura = false;
         
@@ -293,6 +297,8 @@ export default function Pannelatrice({
         }
 
         if (needsSaldatura) {
+          updateAvanzamentiCG(item.articolo, item.commessa || '', confirmedQty, 'piega', 'saldato');
+          
           await addFaseSaldatura({
             data: new Date().toLocaleDateString('it-IT'),
             articolo: item.articolo,
@@ -315,6 +321,9 @@ export default function Pannelatrice({
             data_reg: new Date().toISOString()
           });
         } else {
+          // Si sposta la quantita da piega a verniciatura
+          updateAvanzamentiCG(item.articolo, item.commessa || '', confirmedQty, 'piega', 'vern');
+
           await addFaseVerniciatura({
             data: new Date().toLocaleDateString('it-IT'),
             articolo: item.articolo,
@@ -337,6 +346,12 @@ export default function Pannelatrice({
             data_reg: new Date().toISOString()
           });
         }
+      } else if (apiPath === '/api/fase-saldatura') {
+        // Se si completa la saldatura, va rimosso da saldatura -> andrà in Vern
+        updateAvanzamentiCG(item.articolo, item.commessa || '', confirmedQty, 'saldato', 'vern');
+      } else if (apiPath === '/api/fase-verniciatura') {
+        // Quando la VERNICIATURA Finisce: spostalo in impegnati
+        updateAvanzamentiCG(item.articolo, item.commessa || '', confirmedQty, 'vern', 'impegnati');
       }
 
       toast.success('Lavorazione completata e carico registrato');

@@ -5,6 +5,7 @@ import { apiCall, addMacchina5000, addTaglioLaser } from '../api';
 import { Article, FaseTaglio } from '../types';
 import toast from 'react-hot-toast';
 import JsBarcode from 'jsbarcode';
+import { updateAvanzamentiCG } from '../utils/cgiallaHelper';
 
 interface FaseTaglioViewProps {
   articles: Article[];
@@ -197,6 +198,11 @@ export default function FaseTaglioView({ articles, username, onUpdate }: FaseTag
       if (newValue === 1) {
         await archiveProgrammaEseguito(row);
         
+        // AUTOMAZIONE: Aggiornamento Avanzamenti CGialla (Taglio -> Piega)
+        /* Nota: Se tagliare sposta il processo alla piega, possiamo aggiornare qui 
+           il tracker visivo degli Avanzamenti C.G. */
+        updateAvanzamentiCG(row.articolo, row.commessa || '', row.quantita, 'taglio', 'piega');
+
         // AUTOMAZIONE: Aggiungi a Macchina 5000 o Taglio Laser
         try {
           const machineData = {

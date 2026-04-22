@@ -25,6 +25,7 @@ import MagSemiLavView from './MagSemiLavView';
 import BancaCostiLavorazioni from './BancaCostiLavorazioni';
 import TermsPolicy from './TermsPolicy';
 import StdModificatoView from './StdModificatoView';
+import AvanzamentiCGView from './AvanzamentiCGView';
 import SyncPopup from './SyncPopup';
 import ProductionAlerts from './ProductionAlerts';
 import SchedaVerniciaturaView from './SchedaVerniciaturaView';
@@ -114,6 +115,7 @@ export default function Dashboard({ username, role, onLogout }: DashboardProps) 
     isOsvaldo ? 'taglioLaser' :
     isRida ? 'faseTaglio' : 'dashboard'
   );
+  const [presetSchedaVerniciatura, setPresetSchedaVerniciatura] = useState<any>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [productionFamilyFilter, setProductionFamilyFilter] = useState('Tutte');
   console.log('DEBUG: Dashboard productionFamilyFilter:', productionFamilyFilter);
@@ -1009,13 +1011,22 @@ export default function Dashboard({ username, role, onLogout }: DashboardProps) 
                   </>
                 ) : null}
                 {!isElena && (!isAndrea && !isOsvaldo && !isRida || role === 'developer') && (
-                  <button
-                    onClick={() => { setCurrentView('stdModificato'); setMenuOpen(false); }}
-                    className={`w-full text-left px-6 py-3.5 flex items-center gap-3 transition-all ${currentView === 'stdModificato' ? 'bg-emerald-500/10 text-emerald-400 border-l-4 border-emerald-500 font-semibold' : 'text-slate-300 hover:bg-white/5 hover:text-white border-l-4 border-transparent font-medium'}`}
-                  >
-                    <Grid className="h-5 w-5" />
-                    <span>Std Modificato</span>
-                  </button>
+                  <>
+                    <button
+                      onClick={() => { setCurrentView('stdModificato'); setMenuOpen(false); }}
+                      className={`w-full text-left px-6 py-3.5 flex items-center gap-3 transition-all ${currentView === 'stdModificato' ? 'bg-emerald-500/10 text-emerald-400 border-l-4 border-emerald-500 font-semibold' : 'text-slate-300 hover:bg-white/5 hover:text-white border-l-4 border-transparent font-medium'}`}
+                    >
+                      <Grid className="h-5 w-5" />
+                      <span>Std Modificato</span>
+                    </button>
+                    <button
+                      onClick={() => { setCurrentView('avanzamentiCG'); setMenuOpen(false); }}
+                      className={`w-full text-left px-6 py-3.5 flex items-center gap-3 transition-all ${currentView === 'avanzamentiCG' ? 'bg-cyan-500/10 text-cyan-400 border-l-4 border-cyan-500 font-semibold' : 'text-slate-300 hover:bg-white/5 hover:text-white border-l-4 border-transparent font-medium'}`}
+                    >
+                      <Activity className="h-5 w-5" />
+                      <span>Avanzamenti C.G.</span>
+                    </button>
+                  </>
                 )}
                 {(!isAndrea && !isOsvaldo && !isRida) || role === 'developer' ? (
                   <button
@@ -1342,7 +1353,14 @@ export default function Dashboard({ username, role, onLogout }: DashboardProps) 
         ) : currentView === 'impegni' ? (
           <CommitmentsView onUpdate={handleArticleUpdate} username={username} articles={articles} commitments={commitments} />
         ) : currentView === 'clienti' ? (
-          <ClientsView username={username} isAuthorized={isAuthorized} />
+          <ClientsView 
+            username={username} 
+            isAuthorized={isAuthorized} 
+            onCreaCopiaScheda={(scheda) => {
+               setPresetSchedaVerniciatura(scheda);
+               setCurrentView('schedaVerniciatura');
+            }}
+          />
         ) : currentView === 'movimentiCGialla' ? (
           <MovimentiCGiallaView />
         ) : currentView === 'cGialle' ? (
@@ -1351,8 +1369,10 @@ export default function Dashboard({ username, role, onLogout }: DashboardProps) 
           <TermsPolicy />
         ) : currentView === 'stdModificato' ? (
           <StdModificatoView />
+        ) : currentView === 'avanzamentiCG' ? (
+          <AvanzamentiCGView />
         ) : currentView === 'schedaVerniciatura' ? (
-          <SchedaVerniciaturaView articles={articles} />
+          <SchedaVerniciaturaView articles={articles} presetScheda={presetSchedaVerniciatura} />
         ) : currentView === 'sald-auto-stt-stb-piantane' ? (
           <Pannelatrice
             articles={articles}

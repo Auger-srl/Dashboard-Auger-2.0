@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Client } from '../types';
-import { Users, Plus, Edit2, Trash2, X, Check } from 'lucide-react';
+import { Users, Plus, Edit2, Trash2, X, Check, ChevronDown, ChevronRight, Copy } from 'lucide-react';
 import ConfirmModal from './ConfirmModal';
-import { fetchClients, addClient, updateClient, deleteClient } from '../api';
+import { fetchClients, addClient, updateClient, deleteClient, fetchSchedeVerniciaturaArchive } from '../api';
 import toast from 'react-hot-toast';
 
 interface ClientsViewProps {
   username: string;
   isAuthorized: boolean;
+  onCreaCopiaScheda?: (scheda: any) => void;
 }
 
-export default function ClientsView({ username, isAuthorized }: ClientsViewProps) {
+export default function ClientsView({ username, isAuthorized, onCreaCopiaScheda }: ClientsViewProps) {
   const [clients, setClients] = useState<Client[]>([]);
+  const [schedeArchive, setSchedeArchive] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedClient, setExpandedClient] = useState<string | null>(null);
+
   const [nome, setNome] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editNome, setEditNome] = useState('');
@@ -32,15 +36,24 @@ export default function ClientsView({ username, isAuthorized }: ClientsViewProps
 
   const loadClients = async () => {
     try {
-      const data = await fetchClients();
+      const [data, schedeData] = await Promise.all([
+        fetchClients(),
+        fetchSchedeVerniciaturaArchive()
+      ]);
+      
       if (Array.isArray(data)) {
         setClients(data);
       } else {
-        console.error("Data received for clients is not an array:", data);
         setClients([]);
       }
+      
+      if (Array.isArray(schedeData)) {
+        setSchedeArchive(schedeData);
+      } else {
+        setSchedeArchive([]);
+      }
     } catch (error) {
-      console.error("Error fetching clients:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
@@ -200,62 +213,115 @@ export default function ClientsView({ username, isAuthorized }: ClientsViewProps
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {clients.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3">
-                      {editingId === c.id ? (
-                        <input
-                          type="text"
-                          value={editNome}
-                          onChange={(e) => setEditNome(e.target.value)}
-                          className="w-full border border-indigo-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                          autoFocus
-                        />
-                      ) : (
-                        <div className="font-medium text-slate-900">{c.nome}</div>
-                      )}
-                    </td>
-                    {isAuthorized && (
-                      <td className="px-4 py-3 text-right">
-                        {editingId === c.id ? (
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => handleUpdate(c.id)}
-                              className="p-1.5 bg-emerald-100 text-emerald-700 rounded hover:bg-emerald-200 transition-colors"
-                              title="Salva"
+                {clients.map((c) => {
+                  const clientSchede = schedeArchive.filter(s => s.cliente.toUpperCase() === c.nome.toUpperCase());
+                  const isExpanded = expandedClient === c.id;
+
+                  return (
+                    <React.Fragment key={c.id}>
+                      <tr className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={() => setExpandedClient(isExpanded ? null : c.id)}
+                              className="p-1 hover:bg-slate-200 rounded text-slate-500"
                             >
-                              <Check className="h-4 w-4" />
+                              {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                             </button>
-                            <button
-                              onClick={cancelEditing}
-                              className="p-1.5 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
-                              title="Annulla"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
+                            {editingId === c.id ? (
+                              <input
+                                type="text"
+                                value={editNome}
+                                onChange={(e) => setEditNome(e.target.value)}
+                                className="w-full border border-indigo-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                autoFocus
+                              />
+                            ) : (
+                              <div className="font-medium text-slate-900">{c.nome} {clientSchede.length > 0 && <span className="ml-2 text-xs font-normal text-slate-500">({clientSchede.length} schede)</span>}</div>
+                            )}
                           </div>
-                        ) : (
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => startEditing(c)}
-                              className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
-                              title="Modifica"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(c.id)}
-                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                              title="Elimina"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
+                        </td>
+                        {isAuthorized && (
+                          <td className="px-4 py-3 text-right">
+                            {editingId === c.id ? (
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => handleUpdate(c.id)}
+                                  className="p-1.5 bg-emerald-100 text-emerald-700 rounded hover:bg-emerald-200 transition-colors"
+                                  title="Salva"
+                                >
+                                  <Check className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={cancelEditing}
+                                  className="p-1.5 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                                  title="Annulla"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => startEditing(c)}
+                                  className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                                  title="Modifica"
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(c.id)}
+                                  className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                  title="Elimina"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            )}
+                          </td>
                         )}
-                      </td>
-                    )}
-                  </tr>
-                ))}
+                      </tr>
+                      {isExpanded && clientSchede.length > 0 && (
+                        <tr>
+                          <td colSpan={isAuthorized ? 2 : 1} className="bg-slate-50 p-4 border-b border-slate-200">
+                            <div className="pl-6">
+                              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Archivio Schede Verniciatura</h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {clientSchede.map((scheda) => (
+                                  <div key={scheda.id} className="bg-white border text-sm border-slate-200 rounded-lg p-3 shadow-sm hover:border-blue-300 transition-colors">
+                                    <div className="flex justify-between items-start mb-2">
+                                      <div className="font-medium text-slate-800">Commessa: {scheda.commessa || '-'}</div>
+                                      <button 
+                                        onClick={() => onCreaCopiaScheda && onCreaCopiaScheda(scheda)}
+                                        className="text-xs flex items-center gap-1 text-blue-600 bg-blue-50 px-2 py-1 rounded hover:bg-blue-100"
+                                      >
+                                        <Copy className="h-3 w-3" /> Crea Copia
+                                      </button>
+                                    </div>
+                                    <div className="text-slate-600 text-xs mb-1">
+                                      Ordine CF: {scheda.ordine_cliente || '-'}
+                                    </div>
+                                    <div className="text-slate-500 text-xs mt-2 pt-2 border-t border-slate-100 flex justify-between">
+                                      <span>{new Date(scheda.created_at).toLocaleDateString('it-IT')}</span>
+                                      <span>{scheda.composizione_cassa || 'Nessuna comp.'}</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      {isExpanded && clientSchede.length === 0 && (
+                        <tr>
+                          <td colSpan={isAuthorized ? 2 : 1} className="bg-slate-50 p-4 border-b border-slate-200 text-center text-sm items-center text-slate-500">
+                            Nessuna scheda archiviata per questo cliente.
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           )}

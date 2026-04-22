@@ -950,6 +950,42 @@ async function startServer() {
     }
   });
 
+  // SCHEDE VERNICIATURA ARCHIVE ROUTES
+  app.get('/api/schede-verniciatura-archive', (req, res) => {
+    try {
+      const rows = db.prepare('SELECT * FROM schede_verniciatura_archive ORDER BY created_at DESC').all();
+      // parse json for client convenience
+      const parsed = rows.map((r: any) => ({
+        ...r,
+        items: JSON.parse(r.items_json || '[]')
+      }));
+      res.json(parsed);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post('/api/schede-verniciatura-archive', (req, res) => {
+    const { cliente, commessa, ordine_cliente, note, data_consegna, ral, composizione_cassa, items } = req.body;
+    try {
+      const items_json = JSON.stringify(items || []);
+      const stmt = db.prepare(`INSERT INTO schede_verniciatura_archive (cliente, commessa, ordine_cliente, note, data_consegna, ral, composizione_cassa, items_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
+      const info = stmt.run(cliente || '', commessa || '', ordine_cliente || '', note || '', data_consegna || '', ral || '', composizione_cassa || '', items_json);
+      res.json({ id: info.lastInsertRowid, success: true });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete('/api/schede-verniciatura-archive/:id', (req, res) => {
+    try {
+      db.prepare('DELETE FROM schede_verniciatura_archive WHERE id = ?').run(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.get('/api/programmi-eseguiti', (req, res) => {
     try {
       const rows = db.prepare('SELECT *, timestamp_esecuzione as data_archiviazione FROM programmi_eseguiti ORDER BY timestamp_esecuzione DESC').all();

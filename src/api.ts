@@ -95,6 +95,15 @@ export const fetchDashboardData = async (): Promise<{
 }> => {
   return apiCall<any>('/api/dashboard-data');
 };
+
+// Schede Verniciatura Archive
+export const fetchSchedeVerniciaturaArchive = () => apiCall<any[]>('/api/schede-verniciatura-archive');
+export const addSchedaVerniciaturaArchive = (data: any) => apiCall<{id: number, success: boolean}>('/api/schede-verniciatura-archive', {
+  method: 'POST',
+  body: JSON.stringify(data)
+});
+export const deleteSchedaVerniciaturaArchive = (id: string | number) => apiCall<{success: boolean}>(`/api/schede-verniciatura-archive/${id}`, { method: 'DELETE' });
+
 // Articles
 export const fetchArticles = async (): Promise<Article[]> => {
   return apiCall<Article[]>('/api/articles');

@@ -40,6 +40,19 @@ export interface ChatMessage {
   timestamp: string;
 }
 
+export interface SchedaVerniciaturaArchive {
+  id: number;
+  cliente: string;
+  commessa: string;
+  ordine_cliente: string;
+  note: string;
+  data_consegna: string;
+  ral: string;
+  composizione_cassa: string;
+  items: any[];
+  created_at: string;
+}
+
 export interface Client {
   id: string;
   nome: string;

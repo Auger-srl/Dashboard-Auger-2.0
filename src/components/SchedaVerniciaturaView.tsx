@@ -9,7 +9,8 @@ import {
   addFaseSaldatura,
   addFasePannelatrice,
   addFaseTaglio,
-  fetchProcesses
+  fetchProcesses,
+  addSchedaVerniciaturaArchive
 } from '../api';
 import { Process } from '../types';
 import toast from 'react-hot-toast';
@@ -18,9 +19,10 @@ import clsx from 'clsx';
 
 interface Props {
   articles?: Article[];
+  presetScheda?: any;
 }
 
-export default function SchedaVerniciaturaView({ articles = [] }: Props) {
+export default function SchedaVerniciaturaView({ articles = [], presetScheda }: Props) {
   const [clients, setClients] = useState<Client[]>([]);
   const [processes, setProcesses] = useState<Process[]>([]);
 
@@ -53,6 +55,30 @@ export default function SchedaVerniciaturaView({ articles = [] }: Props) {
   const [table2Rows, setTable2Rows] = useState(Array(4).fill(null).map(() => ({
     parte: '', cod: '', nr: '', desc: '', note: '', ral: '', spc: ''
   })));
+
+  useEffect(() => {
+    if (presetScheda) {
+      setHeaderData(prev => ({
+        ...prev,
+        cliente: presetScheda.cliente || '',
+        commessa: presetScheda.commessa || '',
+        ordineCliente: presetScheda.ordine_cliente || '',
+        composizioneDettaglio: presetScheda.composizione_cassa || '',
+        // The user said: "di defoult deve avermi tolto quei campi: data consegna, la quantità il ral e le note"
+        dataConsegna: '',
+        noteSV: '',
+        ral: '',
+        quantitaGen: ''
+      }));
+
+      if (presetScheda.items && presetScheda.items.table1) {
+         setTable1Rows(presetScheda.items.table1.map((r: any) => ({...r, nr: '', ral: '', note: '', spc: ''})));
+      }
+      if (presetScheda.items && presetScheda.items.table2) {
+         setTable2Rows(presetScheda.items.table2.map((r: any) => ({...r, nr: '', ral: '', note: '', spc: ''})));
+      }
+    }
+  }, [presetScheda]);
 
   const sheetRef = useRef<HTMLDivElement>(null);
 
@@ -367,6 +393,7 @@ export default function SchedaVerniciaturaView({ articles = [] }: Props) {
       console.log(`Lotto è Tutto Standard? ${isBatchStandard}`);
 
       const commitmentsToAdd: any[] = [];
+      const avanzamentiToAdd: any[] = [];
 
       for (const item of allItems) {
         const noteLower = item.note.toLowerCase();
@@ -404,6 +431,19 @@ export default function SchedaVerniciaturaView({ articles = [] }: Props) {
           tracciamento = 'Storico C.G.';
           fasiReq = 'Taglio -> M5000/Laser -> Pannellatrice'; // (e Verniciatura gestito dal domino se serve)
 
+          avanzamentiToAdd.push({
+            id: `auto-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            cliente: headerData.cliente.trim().toUpperCase(),
+            articolo: articoloFull,
+            taglio: String(item.quantita),
+            piega: '',
+            saldato: '',
+            vern: '',
+            impegnati: '',
+            nuova: '',
+            note: `${item.note} (Comm: ${headerData.commessa})`
+          });
+
           await addFaseTaglio({
             lavorazione_per: headerData.cliente.trim().toUpperCase(),
             articolo: articoloFull,
@@ -434,6 +474,19 @@ export default function SchedaVerniciaturaView({ articles = [] }: Props) {
           repartoIniziale = 'Pannellatrice';
           tracciamento = 'Storico C.G.';
           fasiReq = 'Pannellatrice'; // NON passa da verniciatura in questa fase
+
+          avanzamentiToAdd.push({
+            id: `auto-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            cliente: headerData.cliente.trim().toUpperCase(),
+            articolo: articoloFull,
+            taglio: '',
+            piega: String(item.quantita),
+            saldato: '',
+            vern: '',
+            impegnati: '',
+            nuova: '',
+            note: `${item.note} (Comm: ${headerData.commessa})`
+          });
 
           await addFasePannelatrice({
             data: new Date().toLocaleDateString('it-IT'),
@@ -508,6 +561,39 @@ export default function SchedaVerniciaturaView({ articles = [] }: Props) {
           stato_lavorazione: 'Pianificato',
           operatore: 'Auto SV'
         });
+      }
+
+      if (avanzamentiToAdd.length > 0) {
+        try {
+          const savedStr = localStorage.getItem('avanzamentiCGData_v2');
+          let currentAvanzamenti: any[] = [];
+          if (savedStr) {
+            currentAvanzamenti = JSON.parse(savedStr);
+          }
+          currentAvanzamenti = [...avanzamentiToAdd, ...currentAvanzamenti];
+          localStorage.setItem('avanzamentiCGData_v2', JSON.stringify(currentAvanzamenti));
+        } catch (e) {
+          console.error("Errore aggiungendo da Scheda Verniciatura in Avanzamenti C.G.", e);
+        }
+      }
+
+      // SALVA NELL'ARCHIVIO SCHEDE VERNICIATURA
+      try {
+        await addSchedaVerniciaturaArchive({
+          cliente: headerData.cliente.trim().toUpperCase(),
+          commessa: headerData.commessa.trim().toUpperCase(),
+          ordine_cliente: headerData.ordineCliente || '',
+          note: headerData.noteSV || '',
+          data_consegna: headerData.dataConsegna || '',
+          ral: headerData.ral || '',
+          composizione_cassa: headerData.composizione || '',
+          items: {
+            table1: table1Rows,
+            table2: table2Rows
+          }
+        });
+      } catch (err) {
+        console.error("Errore durante il salvataggio in archivio", err);
       }
 
       toast.success('Impegni creati ed elaborati con successo!', { id: 'impegno' });

@@ -301,6 +301,14 @@ db.exec(`
     odl TEXT,
     commessa TEXT,
     cliente TEXT,
+    preparazione INTEGER DEFAULT 0,
+    inizio TEXT,
+    inizio2 TEXT,
+    pausa TEXT,
+    fine TEXT,
+    totale_tempo INTEGER,
+    operatore TEXT,
+    note TEXT,
     fatto INTEGER DEFAULT 0,
     stampato INTEGER DEFAULT 0,
     macchina TEXT DEFAULT 'Verniciatura',
@@ -318,6 +326,19 @@ db.exec(`
     commessa TEXT,
     macchina TEXT,
     timestamp_stampa DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS schede_verniciatura_archive (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cliente TEXT NOT NULL,
+    commessa TEXT,
+    ordine_cliente TEXT,
+    note TEXT,
+    data_consegna TEXT,
+    ral TEXT,
+    composizione_cassa TEXT,
+    items_json TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
   CREATE TABLE IF NOT EXISTS programmi_eseguiti (
@@ -431,6 +452,22 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_movimenti_c_gialla_articolo ON movimenti_c_gialla(articolo_spc);
   CREATE INDEX IF NOT EXISTS idx_archivio_stampe_articolo ON archivio_stampe(articolo);
 `);
+
+// Safe alter table for phase fields in fase_verniciatura
+try {
+  db.exec(`
+    ALTER TABLE fase_verniciatura ADD COLUMN preparazione INTEGER DEFAULT 0;
+    ALTER TABLE fase_verniciatura ADD COLUMN inizio TEXT;
+    ALTER TABLE fase_verniciatura ADD COLUMN inizio2 TEXT;
+    ALTER TABLE fase_verniciatura ADD COLUMN pausa TEXT;
+    ALTER TABLE fase_verniciatura ADD COLUMN fine TEXT;
+    ALTER TABLE fase_verniciatura ADD COLUMN totale_tempo INTEGER;
+    ALTER TABLE fase_verniciatura ADD COLUMN operatore TEXT;
+    ALTER TABLE fase_verniciatura ADD COLUMN note TEXT;
+  `);
+} catch(e) {
+  // Columns might already exist, ignore
+}
 
 // Seed traverse_inventory
 try {
