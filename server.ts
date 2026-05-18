@@ -986,6 +986,42 @@ async function startServer() {
     }
   });
 
+  // SCHEDE VERNICIATURA ARCHIVE ROUTES
+  app.get('/api/schede-verniciatura-archive', (req, res) => {
+    try {
+      const rows = db.prepare('SELECT * FROM schede_verniciatura_archive ORDER BY created_at DESC').all();
+      // parse json for client convenience
+      const parsed = rows.map((r: any) => ({
+        ...r,
+        items: JSON.parse(r.items_json || '[]')
+      }));
+      res.json(parsed);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post('/api/schede-verniciatura-archive', (req, res) => {
+    const { cliente, commessa, ordine_cliente, note, data_consegna, ral, composizione_cassa, items } = req.body;
+    try {
+      const items_json = JSON.stringify(items || []);
+      const stmt = db.prepare(`INSERT INTO schede_verniciatura_archive (cliente, commessa, ordine_cliente, note, data_consegna, ral, composizione_cassa, items_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
+      const info = stmt.run(cliente || '', commessa || '', ordine_cliente || '', note || '', data_consegna || '', ral || '', composizione_cassa || '', items_json);
+      res.json({ id: info.lastInsertRowid, success: true });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete('/api/schede-verniciatura-archive/:id', (req, res) => {
+    try {
+      db.prepare('DELETE FROM schede_verniciatura_archive WHERE id = ?').run(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.get('/api/programmi-eseguiti', (req, res) => {
     try {
       const rows = db.prepare('SELECT *, timestamp_esecuzione as data_archiviazione FROM programmi_eseguiti ORDER BY timestamp_esecuzione DESC').all();
@@ -1023,10 +1059,10 @@ async function startServer() {
   });
 
   app.post('/api/articles', (req, res) => {
-    const { nome, codice, verniciati = 0, impegni_clienti = 0, piega = 0, prezzo = 0, scorta = 10 } = req.body;
+    const { nome, codice, verniciati = 0, impegni_clienti = 0, piega = 0, prezzo = 0, scorta = 10, famiglia = null } = req.body;
     try {
-      const stmt = db.prepare('INSERT INTO articles (nome, codice, verniciati, impegni_clienti, piega, prezzo, scorta) VALUES (?, ?, ?, ?, ?, ?, ?)');
-      const info = stmt.run(nome, codice, verniciati, impegni_clienti, piega, prezzo, scorta);
+      const stmt = db.prepare('INSERT INTO articles (nome, codice, verniciati, impegni_clienti, piega, prezzo, scorta, famiglia) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+      const info = stmt.run(nome, codice, verniciati, impegni_clienti, piega, prezzo, scorta, famiglia);
       
       // Create associated process record
       const processStmt = db.prepare('INSERT INTO processes (articolo_id, piega, verniciatura) VALUES (?, ?, ?)');
@@ -1064,9 +1100,10 @@ async function startServer() {
       const prezzo_gommatura = req.body.prezzo_gommatura !== undefined ? req.body.prezzo_gommatura : existing.prezzo_gommatura;
       const prezzo_montaggio = req.body.prezzo_montaggio !== undefined ? req.body.prezzo_montaggio : existing.prezzo_montaggio;
       const prezzo_vendita = req.body.prezzo_vendita !== undefined ? req.body.prezzo_vendita : existing.prezzo_vendita;
+      const famiglia = req.body.famiglia !== undefined ? req.body.famiglia : existing.famiglia;
 
-      const stmt = db.prepare('UPDATE articles SET nome = ?, codice = ?, verniciati = ?, impegni_clienti = ?, piega = ?, prezzo = ?, scorta = ?, prezzo_lamiera = ?, prezzo_taglio = ?, prezzo_piega = ?, prezzo_verniciatura = ?, prezzo_gommatura = ?, prezzo_montaggio = ?, prezzo_vendita = ? WHERE id = ?');
-      stmt.run(nome, codice, verniciati, impegni_clienti, piega, prezzo, scorta, prezzo_lamiera, prezzo_taglio, prezzo_piega, prezzo_verniciatura, prezzo_gommatura, prezzo_montaggio, prezzo_vendita, id);
+      const stmt = db.prepare('UPDATE articles SET nome = ?, codice = ?, verniciati = ?, impegni_clienti = ?, piega = ?, prezzo = ?, scorta = ?, prezzo_lamiera = ?, prezzo_taglio = ?, prezzo_piega = ?, prezzo_verniciatura = ?, prezzo_gommatura = ?, prezzo_montaggio = ?, prezzo_vendita = ?, famiglia = ? WHERE id = ?');
+      stmt.run(nome, codice, verniciati, impegni_clienti, piega, prezzo, scorta, prezzo_lamiera, prezzo_taglio, prezzo_piega, prezzo_verniciatura, prezzo_gommatura, prezzo_montaggio, prezzo_vendita, famiglia || null, id);
       
       // Also update processes.piega to keep them in sync
       db.prepare('UPDATE processes SET piega = ? WHERE articolo_id = ?').run(piega, id);
@@ -1393,10 +1430,10 @@ async function startServer() {
       const categories = [
         { label: "LEGGIO M.", prefix: "AGLM" },
         { label: "PO AGLM", prefix: "AGLM-PO" },
-        { label: "PIANALE MENS.", prefix: "AGLM" },
+        { label: "PIANALE MENS.", prefix: "AGLM-PM" },
         { label: "RE AGLM", prefix: "AGLM-RE" },
         { label: "PA AGLM", prefix: "AGLM-PA" },
-        { label: "AGLM COMP.", prefix: "AGLM" }
+        { label: "AGLM COMP.", prefix: "AGLM-CO" }
       ];
 
       for (const item of aglmItems) {

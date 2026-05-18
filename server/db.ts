@@ -35,6 +35,7 @@ db.exec(`
     famiglia TEXT,
     is_blocked INTEGER DEFAULT 0
   );
+
  
   CREATE TABLE IF NOT EXISTS processes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -326,6 +327,19 @@ db.exec(`
     commessa TEXT,
     macchina TEXT,
     timestamp_stampa DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS schede_verniciatura_archive (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cliente TEXT NOT NULL,
+    commessa TEXT,
+    ordine_cliente TEXT,
+    note TEXT,
+    data_consegna TEXT,
+    ral TEXT,
+    composizione_cassa TEXT,
+    items_json TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
   CREATE TABLE IF NOT EXISTS schede_verniciatura_archive (
@@ -931,113 +945,6 @@ try {
 
 // Seeding articles
 const seedArticles = [
-  { nome: 'PIASTRA AT 200X300', codice: 'AT-PA0203', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 250X300', codice: 'AT-PA02503', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 300X300', codice: 'AT-PA0303', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 300X400', codice: 'AT-PA0304', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 300X500', codice: 'AT-PA0305', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 400X300', codice: 'AT-PA0403', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 400X400', codice: 'AT-PA0404', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 400X500', codice: 'AT-PA0405', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 400X600', codice: 'AT-PA0406', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 500X500', codice: 'AT-PA0505', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 500X700', codice: 'AT-PA0507', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 600X400', codice: 'AT-PA0604', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 600X600', codice: 'AT-PA0606', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 600X800', codice: 'AT-PA0608', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 600X1000', codice: 'AT-PA0610', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 600X1200', codice: 'AT-PA0612', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 800X600', codice: 'AT-PA0806', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 800X800', codice: 'AT-PA0808', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 800X1000', codice: 'AT-PA0810', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 800X1200', codice: 'AT-PA0812', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 1000X800', codice: 'AT-PA1008', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 1000X1000', codice: 'AT-PA1010', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 1000X1200', codice: 'AT-PA1012', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 1000X1400', codice: 'AT-PA1014', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 1200X800', codice: 'AT-PA1208', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 1200X1000', codice: 'AT-PA1210', famiglia: 'PIASTRE AT' },
-  { nome: 'PIASTRA AT 1200X1200', codice: 'AT-PA1212', famiglia: 'PIASTRE AT' },
-  { nome: 'PORTA AT 200X300 STD', codice: 'AT-PO0203-STD', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 250X300 STD', codice: 'AT-PO02503-STD', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 300X300 STD', codice: 'AT-PO0303-STD', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 300X400 STD', codice: 'AT-PO0304-STD', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 300X500 STD', codice: 'AT-PO0305-STD', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 400X300 STD', codice: 'AT-PO0403-STD', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 400X400 STD', codice: 'AT-PO0404-STD', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 400X500 STD', codice: 'AT-PO0405-STD', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 400X600 STD', codice: 'AT-PO0406-STD', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 500X500 STD', codice: 'AT-PO0505-STD', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 500X700 STD', codice: 'AT-PO0507-STD', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 600X400 STD', codice: 'AT-PO0604-STD', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 600X600 STD', codice: 'AT-PO0606-STD', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 600X800 STD', codice: 'AT-PO0608-STD', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 600X1000 STD', codice: 'AT-PO0610-STD', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 600X1200 STD', codice: 'AT-PO0612-STD', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 800X600 IB', codice: 'AT-PO0806-IB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 800X600 CB', codice: 'AT-PO0806-CB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 800X800 IB', codice: 'AT-PO0808-IB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 800X800 CB', codice: 'AT-PO0808-CB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 800X1000 IB', codice: 'AT-PO0810-IB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 800X1000 CB', codice: 'AT-PO0810-CB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 800X1200 IB', codice: 'AT-PO0812-IB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 800X1200 CB', codice: 'AT-PO0812-CB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 1000X800 IB', codice: 'AT-PO1008-IB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 1000X800 CB', codice: 'AT-PO1008-CB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 1000X1000 IB', codice: 'AT-PO1010-IB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 1000X1000 CB', codice: 'AT-PO1010-CB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 1000X1200 IB', codice: 'AT-PO1012-IB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 1000X1200 CB', codice: 'AT-PO1012-CB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 1000X1400 IB', codice: 'AT-PO1014-IB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 1000X1400 CB', codice: 'AT-PO1014-CB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 1200X800 IB', codice: 'AT-PO1208-IB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 1200X800 CB', codice: 'AT-PO1208-CB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 1200X1000 IB', codice: 'AT-PO1210-IB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 1200X1000 CB', codice: 'AT-PO1210-CB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 1200X1200 IB', codice: 'AT-PO1212-IB', famiglia: 'PORTE AT' },
-  { nome: 'PORTA AT 1200X1200 CB', codice: 'AT-PO1212-CB', famiglia: 'PORTE AT' },
-  { nome: 'INVOLUCRO AT 200X300X150', codice: 'AT-IN2315', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 250X300X150', codice: 'AT-IN25315', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 300X300X150', codice: 'AT-IN3315', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 300X400X150', codice: 'AT-IN3415', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 300X400X200', codice: 'AT-IN3420', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 300X500X150', codice: 'AT-IN3515', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 300X500X200', codice: 'AT-IN3520', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 300X500X250', codice: 'AT-IN3525', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 400X400X200', codice: 'AT-IN4420', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 400X500X150', codice: 'AT-IN4515', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 400X500X200', codice: 'AT-IN4520', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 400X500X250', codice: 'AT-IN4525', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 400X600X200', codice: 'AT-IN4620', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 400X600X250', codice: 'AT-IN4625', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 500X500X200', codice: 'AT-IN5520', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 500X500X250', codice: 'AT-IN5525', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 500X700X200', codice: 'AT-IN5720', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 500X700X250', codice: 'AT-IN5725', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 600X400X400', codice: 'AT-IN6440', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 600X600X200', codice: 'AT-IN6620', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 600X600X250', codice: 'AT-IN6625', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 600X600X300', codice: 'AT-IN6630', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 600X600X400', codice: 'AT-IN6640', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 600X800X200', codice: 'AT-IN6820', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 600X800X250', codice: 'AT-IN6825', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 600X800X300', codice: 'AT-IN6830', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 600X800X400', codice: 'AT-IN6840', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 600X1000X250', codice: 'AT-IN61025', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 600X1000X300', codice: 'AT-IN61030', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 600X1000X400', codice: 'AT-IN61040', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 600X1200X300', codice: 'AT-IN61230', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 800X800X200', codice: 'AT-IN8820', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 800X800X300', codice: 'AT-IN8830', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 800X1000X250', codice: 'AT-IN81025', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 800X1000X300', codice: 'AT-IN81030', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 800X1200X300', codice: 'AT-IN81230', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 1000X800X200', codice: 'AT-IN10820', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 1000X1000X300', codice: 'AT-IN101030', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 1000X1000X400', codice: 'AT-IN101040', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 1000X1200X300', codice: 'AT-IN101230', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 1000X1400X300', codice: 'AT-IN101430', famiglia: 'INVOLUCRI AT' },
-  { nome: 'INVOLUCRO AT 1200X1200X300', codice: 'AT-IN121230', famiglia: 'INVOLUCRI AT' },
   { nome: 'PORTA 200X1800', codice: 'AG-PO0218' },
   { nome: 'PORTA 300X1800', codice: 'AG-PO0318' },
   { nome: 'PORTA 300X2000', codice: 'AG-PO0320' },
@@ -1165,8 +1072,7 @@ const seedArticles = [
   { nome: 'PORTA CIECA AG L1000 H800 IN BATTUTA', codice: 'AG-PO1008IB' },
   { nome: 'PORTA CIECA AG L1000 H800 CON BATTUTA', codice: 'AG-PO1008CB' },
   { nome: 'PORTA CIECA AG L1000 H1000 IN BATTUTA', codice: 'AG-PO1010IB' },
-  { nome: 'PORTA CIECA AG L1000 H1000 CON BATTUTA', codice: 'AG-PO1010CB' },
-  { nome: 'PANNELLO RETRO AG L250 H1800', codice: 'AG-RE02518', famiglia: 'PANNELLI RETRO' },
+  { nome: 'PORTA CIECA AG L1000 H1000 CON BATTUTA', codice: 'AG-PO1010CB', famiglia: 'PORTE' },
   { nome: 'PANNELLO RETRO AG L300 H1800', codice: 'AG-RE0318', famiglia: 'PANNELLI RETRO' },
   { nome: 'PANNELLO RETRO AG L300 H2000', codice: 'AG-RE0320', famiglia: 'PANNELLI RETRO' },
   { nome: 'PANNELLO RETRO AG L400 H1400', codice: 'AG-RE0414', famiglia: 'PANNELLI RETRO' },
@@ -1441,6 +1347,7 @@ const insertClient = db.prepare('INSERT OR IGNORE INTO clients (nome) VALUES (?)
 
 console.log('Starting seed and update transaction...');
 try {
+  if (true) {
   db.transaction(() => {
     // Rimuovi articoli con codice che finisce per -40 come richiesto
     db.prepare("DELETE FROM articles WHERE codice LIKE '%-40'").run();
@@ -1596,164 +1503,7 @@ try {
     }
     console.log(`Updated ${updatedCount} articles with production data.`);
 
-    // Add specific commitments requested by user
-    const userCommitments = [
-      { article: 'PORTA 300X1800', month: 'APRILE', qty: 2, client: 'PREI', commessa: 'C?' },
-      { article: 'PORTA 300X2000', month: 'MARZO', qty: 3, client: 'ESEA', commessa: 'C.709' },
-      { article: 'PORTA 300X2000', month: 'MARZO', qty: 3, client: 'PREI', commessa: 'C.737' },
-      { article: 'PORTA 400X1800', month: 'APRILE', qty: 2, client: 'BRIZIO', commessa: 'C.751' },
-      { article: 'PORTA 400X2000', month: 'MARZO', qty: 2, client: 'MAMBRETTI', commessa: 'C.500' },
-      { article: 'PORTA 400X2000', month: 'MARZO', qty: 1, client: 'VARINELLI', commessa: 'C.510' },
-      { article: 'PORTA 600X1200', month: 'MARZO', qty: 15, client: 'R&M', commessa: 'C.548' },
-      { article: 'PORTA 600X1200', month: 'MARZO', qty: 1, client: 'GER', commessa: 'C.702' },
-      { article: 'PORTA 600X1400', month: 'MARZO', qty: 2, client: 'BOUG.', commessa: 'C.730' },
-      { article: 'PORTA 600X1400', month: 'APRILE', qty: 2, client: 'ELIT', commessa: 'C*' },
-      { article: 'PORTA 600X1600', month: 'APRILE', qty: 1, client: 'FRIDEA', commessa: 'C*' },
-      { article: 'PORTA 600X1800', month: 'MARZO', qty: 1, client: 'ANY MA', commessa: 'C.638' },
-      { article: 'PORTA 600X1800', month: 'MARZO', qty: 1, client: 'TECHNOT.', commessa: 'C.700' },
-      { article: 'PORTA 600X1800', month: 'MARZO', qty: 1, client: 'WATER', commessa: 'C.726' },
-      { article: 'PORTA 600X1800', month: 'MARZO', qty: 2, client: 'IND.AMS', commessa: 'C.738' },
-      { article: 'PORTA 600X1800', month: 'MARZO', qty: 1, client: 'IND. AMS', commessa: 'C.739' },
-      { article: 'PORTA 600X1800', month: 'APRILE', qty: 2, client: 'TWK', commessa: 'C.735' },
-      { article: 'PORTA 600X1800', month: 'APRILE', qty: 1, client: 'EL.SYST.', commessa: 'C.782' },
-      { article: 'PORTA 600X1800', month: 'APRILE', qty: 2, client: 'WATER', commessa: 'C.785' },
-      { article: 'PORTA 600X2000', month: 'MARZO', qty: 21, client: 'R&M', commessa: 'C.547' },
-      { article: 'PORTA 600X2000', month: 'MARZO', qty: 1, client: 'MEP', commessa: 'C.722' },
-      { article: 'PORTA 600X2000', month: 'MARZO', qty: 1, client: 'GAMBA', commessa: 'C.724' },
-      { article: 'PORTA 600X2000', month: 'APRILE', qty: 2, client: 'EMMEBI', commessa: 'C.787' },
-      { article: 'PORTA 600X2000', month: 'APRILE', qty: 1, client: 'R&M', commessa: 'C.797' },
-      { article: 'PORTA 800X1200', month: 'MARZO', qty: 1, client: 'DUE PI', commessa: 'C.715' },
-      { article: 'PORTA 800X1400', month: 'APRILE', qty: 1, client: 'DOMO', commessa: 'C.758' },
-      { article: 'PORTA 800X1600', month: 'APRILE', qty: 1, client: 'STAR POW.', commessa: 'C.763' },
-      { article: 'PORTA 800X1800', month: 'MARZO', qty: 2, client: 'JP', commessa: 'C.695' },
-      { article: 'PORTA 800X1800', month: 'MARZO', qty: 2, client: 'CARAGLIO', commessa: 'C.*' },
-      { article: 'PORTA 800X1800', month: 'APRILE', qty: 4, client: 'TIESSE', commessa: 'C.766' },
-      { article: 'PORTA 800X1800', month: 'APRILE', qty: 2, client: 'WATER', commessa: 'C.785' },
-      { article: 'PORTA 800X1800', month: 'APRILE', qty: 2, client: 'SYNTECH', commessa: 'C.788' },
-      { article: 'PORTA 800X1800', month: 'APRILE', qty: 1, client: 'TECNOPRES', commessa: 'C*AGM' },
-      { article: 'PORTA 800X2000', month: 'MARZO', qty: 4, client: 'AUT.IND.', commessa: 'C.655' },
-      { article: 'PORTA 800X2000', month: 'MARZO', qty: 1, client: 'TOSA', commessa: 'C.602' },
-      { article: 'PORTA 800X2000', month: 'MARZO', qty: 1, client: 'MARIO', commessa: 'C.650' },
-      { article: 'PORTA 800X2000', month: 'MARZO', qty: 1, client: 'TECNOQ-', commessa: 'C.682' },
-      { article: 'PORTA 800X2000', month: 'MARZO', qty: 2, client: 'ESEA', commessa: 'C.709' },
-      { article: 'PORTA 800X2000', month: 'MARZO', qty: 1, client: 'MEP', commessa: 'C.722' },
-      { article: 'PORTA 800X2000', month: 'APRILE', qty: 4, client: 'INTEGRA', commessa: 'C.742' },
-      { article: 'PORTA 800X2000', month: 'APRILE', qty: 20, client: 'DOMO', commessa: 'C.758' },
-      { article: 'PORTA 800X2000', month: 'APRILE', qty: 1, client: 'FIMI', commessa: 'C.768' },
-      { article: 'PORTA 800X2000', month: 'APRILE', qty: 3, client: 'EMMEBI', commessa: 'C.787' },
-      { article: 'PORTA 800X2000', month: 'APRILE', qty: 3, client: 'SERTECH', commessa: 'C.794' },
-      { article: 'PORTA 800X2000', month: 'APRILE', qty: 28, client: 'R&M', commessa: 'C.797' },
-      { article: 'PORTA 800X2200', month: 'MARZO', qty: 1, client: 'PRISMA', commessa: 'C.635' },
-      { article: 'PORTA 800X2200', month: 'APRILE', qty: 2, client: 'FIMI', commessa: 'C.771' },
-      { article: 'PORTA 1000X1800', month: 'MARZO', qty: 2, client: 'JP', commessa: 'C.691' },
-      { article: 'PORTA 1000X1800', month: 'MARZO', qty: 1, client: 'JP', commessa: 'C.719' },
-      { article: 'PORTA 1000X1800', month: 'APRILE', qty: 3, client: 'JP', commessa: 'C.750' },
-      { article: 'PORTA 1000X1800', month: 'APRILE', qty: 2, client: 'BRIZIO', commessa: 'C.751' },
-      { article: 'PORTA 1000X1800', month: 'APRILE', qty: 2, client: 'JP', commessa: 'C.762' },
-      { article: 'PORTA 1000X2000', month: 'MARZO', qty: 1, client: 'TECNOPRES', commessa: 'C* AGM' },
-      { article: 'PORTA 1000X2000', month: 'MARZO', qty: 1, client: 'MEP', commessa: 'C.722' },
-      { article: 'PORTA 1000X2000', month: 'APRILE', qty: 1, client: 'ELETRAS', commessa: 'C.743' },
-      { article: 'PORTA 1000X2000', month: 'APRILE', qty: 2, client: 'WARACOM', commessa: 'C*AGM' },
-      { article: 'PORTA 1000X2000', month: 'APRILE', qty: 1, client: 'EMMEBI', commessa: 'C.787' },
-
-      // 600x1800 ib
-      { article: 'PORTA CIECA AG L600 H1800 IN BATTUTA', month: 'MARZO', qty: 2, client: 'JP', commessa: 'C.719' },
-      { article: 'PORTA CIECA AG L600 H1800 IN BATTUTA', month: 'MARZO', qty: 7, client: 'IND.AMS', commessa: 'C.738' },
-      { article: 'PORTA CIECA AG L600 H1800 IN BATTUTA', month: 'APRILE', qty: 2, client: 'SYNTECH', commessa: 'C.788' },
-      { article: 'PORTA CIECA AG L600 H1800 IN BATTUTA', month: 'APRILE', qty: 1, client: 'SYNTECH', commessa: 'C.836' },
-      
-      // 600x1800 cb
-      { article: 'PORTA CIECA AG L600 H1800 CON BATTUTA', month: 'MARZO', qty: 2, client: 'JP', commessa: 'C.719' },
-      { article: 'PORTA CIECA AG L600 H1800 CON BATTUTA', month: 'MARZO', qty: 7, client: 'IND.AMS', commessa: 'C.738' },
-      { article: 'PORTA CIECA AG L600 H1800 CON BATTUTA', month: 'APRILE', qty: 2, client: 'SYNTECH', commessa: 'C.788' },
-      { article: 'PORTA CIECA AG L600 H1800 CON BATTUTA', month: 'APRILE', qty: 1, client: 'SYNTECH', commessa: 'C.836' },
-
-      // 600x2000 ib
-      { article: 'PORTA CIECA AG L600 H2000 IN BATTUTA', month: 'MARZO', qty: 3, client: 'VARINELLI', commessa: 'C.510' },
-      { article: 'PORTA CIECA AG L600 H2000 IN BATTUTA', month: 'MARZO', qty: 1, client: 'SIRIO', commessa: 'C*AGM' },
-      { article: 'PORTA CIECA AG L600 H2000 IN BATTUTA', month: 'MARZO', qty: 1, client: 'MAD', commessa: 'C.662' },
-      { article: 'PORTA CIECA AG L600 H2000 IN BATTUTA', month: 'MARZO', qty: 14, client: 'TECNO', commessa: 'C.711' },
-      { article: 'PORTA CIECA AG L600 H2000 IN BATTUTA', month: 'MARZO', qty: 1, client: 'MEP', commessa: 'C.722' },
-      { article: 'PORTA CIECA AG L600 H2000 IN BATTUTA', month: 'APRILE', qty: 2, client: 'EL.PIAVE', commessa: 'C.745' },
-      { article: 'PORTA CIECA AG L600 H2000 IN BATTUTA', month: 'APRILE', qty: 1, client: 'JOYTEK', commessa: 'C.757' },
-      { article: 'PORTA CIECA AG L600 H2000 IN BATTUTA', month: 'APRILE', qty: 5, client: 'DOMO', commessa: 'C.758' },
-      { article: 'PORTA CIECA AG L600 H2000 IN BATTUTA', month: 'APRILE', qty: 2, client: 'AP2', commessa: 'C.786' },
-      { article: 'PORTA CIECA AG L600 H2000 IN BATTUTA', month: 'APRILE', qty: 2, client: 'JP', commessa: 'C.828' },
-
-      // 600x2000 cb
-      { article: 'PORTA CIECA AG L600 H2000 CON BATTUTA', month: 'MARZO', qty: 3, client: 'VARINELLI', commessa: 'C.510' },
-      { article: 'PORTA CIECA AG L600 H2000 CON BATTUTA', month: 'MARZO', qty: 1, client: 'SIRIO', commessa: 'C*AGM' },
-      { article: 'PORTA CIECA AG L600 H2000 CON BATTUTA', month: 'MARZO', qty: 1, client: 'MAD', commessa: 'C.662' },
-      { article: 'PORTA CIECA AG L600 H2000 CON BATTUTA', month: 'MARZO', qty: 14, client: 'TECNO', commessa: 'C.711' },
-      { article: 'PORTA CIECA AG L600 H2000 CON BATTUTA', month: 'MARZO', qty: 1, client: 'MEP', commessa: 'C.722' },
-      { article: 'PORTA CIECA AG L600 H2000 CON BATTUTA', month: 'APRILE', qty: 2, client: 'EL.PIAVE', commessa: 'C.745' },
-      { article: 'PORTA CIECA AG L600 H2000 CON BATTUTA', month: 'APRILE', qty: 1, client: 'JOYTEK', commessa: 'C.757' },
-      { article: 'PORTA CIECA AG L600 H2000 CON BATTUTA', month: 'APRILE', qty: 5, client: 'DOMO', commessa: 'C.758' },
-      { article: 'PORTA CIECA AG L600 H2000 CON BATTUTA', month: 'APRILE', qty: 1, client: 'FIMI', commessa: 'C.768' },
-      { article: 'PORTA CIECA AG L600 H2000 CON BATTUTA', month: 'APRILE', qty: 2, client: 'AP2', commessa: 'C.786' },
-      { article: 'PORTA CIECA AG L600 H2000 CON BATTUTA', month: 'APRILE', qty: 2, client: 'JP', commessa: 'C.828' },
-
-      // 600x2200 ib
-      { article: 'PORTA CIECA AG L600 H2200 IN BATTUTA', month: 'MARZO', qty: 1, client: 'PRISMA', commessa: 'C.634' },
-      { article: 'PORTA CIECA AG L600 H2200 IN BATTUTA', month: 'APRILE', qty: 2, client: 'EL.PIAVE', commessa: 'C.746' },
-
-      // 600x2200 cb
-      { article: 'PORTA CIECA AG L600 H2200 CON BATTUTA', month: 'MARZO', qty: 1, client: 'PRISMA', commessa: 'C.634' },
-      { article: 'PORTA CIECA AG L600 H2200 CON BATTUTA', month: 'APRILE', qty: 2, client: 'EL.PIAVE', commessa: 'C.746' },
-
-      // 700x1200 ib
-      { article: 'PORTA CIECA AG L700 H1200 IN BATTUTA', month: 'MARZO', qty: 4, client: 'GIDA', commessa: 'C*AGC' },
-
-      // 700x1200 cb
-      { article: 'PORTA CIECA AG L700 H1200 CON BATTUTA', month: 'MARZO', qty: 4, client: 'GIDA', commessa: 'C*AGC' },
-
-      // 700x1800 ib
-      { article: 'PORTA CIECA AG L700 H1800 IN BATTUTA', month: 'MARZO', qty: 2, client: 'JP', commessa: 'C.641' },
-
-      // 700x1800 cb
-      { article: 'PORTA CIECA AG L700 H1800 CON BATTUTA', month: 'MARZO', qty: 2, client: 'JP', commessa: 'C.641' },
-
-      // 800X800 IB
-      { article: 'PORTA CIECA AG L800 H800 IN BATTUTA', month: 'APRILE', qty: 1, client: 'LAWER', commessa: 'C*AGM' },
-
-      // 800X800 CB
-      { article: 'PORTA CIECA AG L800 H800 CON BATTUTA', month: 'APRILE', qty: 1, client: 'LAWER', commessa: 'C*AGM' },
-
-      // 800X1200 IB
-      { article: 'PORTA CIECA AG L800 H1200 IN BATTUTA', month: 'APRILE', qty: 1, client: 'LAWER', commessa: 'C*AGM' },
-
-      // 800X1200 CB
-      { article: 'PORTA CIECA AG L800 H1200 CON BATTUTA', month: 'APRILE', qty: 1, client: 'LAWER', commessa: 'C*AGM' },
-
-      // 800x1800 ib
-      { article: 'PORTA CIECA AG L800 H1800 IN BATTUTA', month: 'MARZO', qty: 1, client: 'SIRIO', commessa: 'C.648' },
-      { article: 'PORTA CIECA AG L800 H1800 IN BATTUTA', month: 'MARZO', qty: 2, client: 'ESEA', commessa: 'C.709' },
-      { article: 'PORTA CIECA AG L800 H1800 IN BATTUTA', month: 'MARZO', qty: 1, client: 'MAMBRETTI', commessa: 'C.710' },
-      { article: 'PORTA CIECA AG L800 H1800 IN BATTUTA', month: 'MARZO', qty: 4, client: 'FDF', commessa: 'C.725' },
-      { article: 'PORTA CIECA AG L800 H1800 IN BATTUTA', month: 'APRILE', qty: 1, client: 'MAMBRETTI', commessa: 'C.798' },
-
-      // 800x1800 cb
-      { article: 'PORTA CIECA AG L800 H1800 CON BATTUTA', month: 'MARZO', qty: 1, client: 'SIRIO', commessa: 'C.648' },
-      { article: 'PORTA CIECA AG L800 H1800 CON BATTUTA', month: 'MARZO', qty: 2, client: 'ESEA', commessa: 'C.709' },
-      { article: 'PORTA CIECA AG L800 H1800 CON BATTUTA', month: 'MARZO', qty: 1, client: 'MAMBRETTI', commessa: 'C.710' },
-      { article: 'PORTA CIECA AG L800 H1800 CON BATTUTA', month: 'MARZO', qty: 4, client: 'FDF', commessa: 'C.725' },
-      { article: 'PORTA CIECA AG L800 H1800 CON BATTUTA', month: 'APRILE', qty: 1, client: 'MAMBRETTI', commessa: 'C.798' },
-
-      // 1000X1000 IB
-      { article: 'PORTA CIECA AG L1000 H1000 IN BATTUTA', month: 'MARZO', qty: 4, client: 'FDF', commessa: 'C*' },
-
-      // 1000X1000 CB
-      { article: 'PORTA CIECA AG L1000 H1000 CON BATTUTA', month: 'MARZO', qty: 4, client: 'FDF', commessa: 'C*' },
-
-      // 500x1400 ib
-      { article: 'PORTA CIECA AG L500 H1400 IN BATTUTA', month: 'APRILE', qty: 2, client: 'MEP', commessa: 'C.793' },
-      // 500x1400 cb
-      { article: 'PORTA CIECA AG L500 H1400 CON BATTUTA', month: 'APRILE', qty: 2, client: 'MEP', commessa: 'C.793' },
-      // 500x2000 ib
-      { article: 'PORTA CIECA AG L500 H2000 IN BATTUTA', month: 'MARZO', qty: 1, client: 'MINGAZZINI', commessa: 'C*' },
-      // 500x2000 cb
-      { article: 'PORTA CIECA AG L500 H2000 CON BATTUTA', month: 'MARZO', qty: 1, client: 'MINGAZZINI', commessa: 'C*' },
-    ];
+    const userCommitments: any[] = [];
 
     /*
     for (const c of userCommitments) {
@@ -1783,6 +1533,7 @@ try {
       console.error('Error during movement log migration:', e);
     }
   })();
+  }
   console.log('Seed and update transaction completed successfully.');
 } catch (e) {
   console.error('Error during seed and update transaction:', e);

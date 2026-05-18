@@ -109,7 +109,7 @@ export default function Dashboard({ username, role, onLogout }: DashboardProps) 
   const [productionAlerts, setProductionAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState<'dashboard' | 'produzione2026' | 'produzione2026spc' | 'impegni' | 'clienti' | 'movimenti' | 'movimentiCGialla' | 'faseTaglio' | 'bancaCosti' | 'macchina5000' | 'taglioLaser' | 'casseAT' | 'magazzinoAGR' | 'magSemiLav' | 'struttureAGM' | 'struttureAGC' | 'struttureAGS' | 'struttureAGLM' | 'termsPolicy' | 'stdModificato' | 'cGialle' | 'schedaVerniciatura' | 'sald-auto-stt-stb-piantane' | 'sald-auto-casse' | 'sald-auto-agr' | 'sald-manuale' | 'fasePannelatrice' | 'fasePiegaManuale' | 'faseVerniciatura'>(
+  const [currentView, setCurrentView] = useState<'dashboard' | 'produzione2026' | 'produzione2026spc' | 'impegni' | 'clienti' | 'movimenti' | 'movimentiCGialla' | 'faseTaglio' | 'bancaCosti' | 'macchina5000' | 'taglioLaser' | 'casseAT' | 'magazzinoAGR' | 'magSemiLav' | 'struttureAGM' | 'struttureAGC' | 'struttureAGS' | 'struttureAGLM' | 'termsPolicy' | 'stdModificato' | 'cGialle' | 'avanzamentiCG' | 'schedaVerniciatura' | 'sald-auto-stt-stb-piantane' | 'sald-auto-casse' | 'sald-auto-agr' | 'sald-manuale' | 'fasePannelatrice' | 'fasePiegaManuale' | 'faseVerniciatura'>(
     isElena ? 'produzione2026' : 
     isAndrea ? 'macchina5000' :
     isOsvaldo ? 'taglioLaser' :

@@ -561,7 +561,6 @@ export default function MagazzinoAGRView({
                   <th className="w-16 border-r border-slate-700 p-2 text-center bg-slate-800">SALD.</th>
                   <th className="w-16 border-r border-slate-700 p-2 text-center bg-slate-800">VER.</th>
                   <th className="w-16 border-r border-slate-700 p-2 text-center bg-indigo-900/40">IMP.</th>
-                  <th className="w-16 border-r border-slate-700 p-2 text-center bg-emerald-900/40">TOT.</th>
                   <th className="w-16 border-r border-slate-700 p-2 text-center bg-blue-900/40">SCORTA</th>
                   <th className="w-24 p-2 text-center bg-slate-800">Azioni</th>
                 </tr>
@@ -626,12 +625,6 @@ export default function MagazzinoAGRView({
                         ) : (a.verniciati || 0)}
                       </td>
                       {renderImpCell(a)}
-                      <td className={clsx(
-                        "border-b border-r border-slate-200 p-1 text-center font-mono text-xs font-black",
-                        disp < 0 ? "text-red-600 bg-red-50" : disp > 0 ? "text-emerald-600 bg-emerald-50" : "text-slate-400"
-                      )}>
-                        {disp}
-                      </td>
                       <td className="border-b border-r border-slate-200 p-1 text-center font-mono text-xs text-blue-600 font-bold bg-blue-50/20">
                         {a.scorta || 0}
                       </td>

@@ -45,7 +45,8 @@ export default function SchedaVerniciaturaView({ articles = [], presetScheda }: 
     tipoImballo: '',
     ordineCliente: '',
     tipoComposizione: '',
-    composizioneDettaglio: ''
+    composizioneDettaglio: '',
+    ral: ''
   });
 
   const [table1Rows, setTable1Rows] = useState(Array(12).fill(null).map(() => ({
@@ -586,7 +587,7 @@ export default function SchedaVerniciaturaView({ articles = [], presetScheda }: 
           note: headerData.noteSV || '',
           data_consegna: headerData.dataConsegna || '',
           ral: headerData.ral || '',
-          composizione_cassa: headerData.composizione || '',
+          composizione_cassa: headerData.composizioneDettaglio || '',
           items: {
             table1: table1Rows,
             table2: table2Rows

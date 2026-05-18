@@ -22,10 +22,10 @@ export default function StruttureAGLMView({ articles, processes, commitments }: 
     switch(category) {
       case 'str': return { label: "LEGGIO M.", code: `AGLM${baseCodifica}-${dimensioni}` };
       case 'porta': return { label: "PO AGLM", code: `AGLM-PO${baseCodifica}-${dimensioni}` };
-      case 'pianale': return { label: "PIANALE MENS.", code: `AGLM${baseCodifica}-${dimensioni}` };
+      case 'pianale': return { label: "PIANALE MENS.", code: `AGLM-PM${baseCodifica}-${dimensioni}` };
       case 'retro': return { label: "RE AGLM", code: `AGLM-RE${baseCodifica}-${dimensioni}` };
       case 'piastra': return { label: "PA AGLM", code: `AGLM-PA${baseCodifica}-${dimensioni}` };
-      case 'mag': return { label: "AGLM COMP.", code: `AGLM${baseCodifica}-${dimensioni}` };
+      case 'mag': return { label: "AGLM COMP.", code: `AGLM-CO${baseCodifica}-${dimensioni}` };
       default: return { label: "ARTICOLO", code: `AGLM${baseCodifica}-${dimensioni}` };
     }
   };

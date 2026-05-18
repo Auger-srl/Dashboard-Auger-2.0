@@ -14,6 +14,7 @@ export interface Article {
   prezzo_gommatura?: number;
   prezzo_montaggio?: number;
   prezzo_vendita?: number;
+  famiglia?: string;
   is_blocked?: number;
 }
 
